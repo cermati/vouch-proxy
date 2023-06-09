@@ -256,6 +256,10 @@ func oauthLoginURL(r *http.Request, session sessions.Session) string {
 
 	// Pass by value, avoid modifying global variable
 	oauthClient := *cfg.OAuthClient
+	if oauthClient.Scopes != nil {
+		// clone array content
+		oauthClient.Scopes = append([]string{}, cfg.OAuthClient.Scopes...)
+	}
 
 	// cfg.OAuthClient.RedirectURL is set in cfg
 	// this checks the multiple redirect case for multiple matching domains

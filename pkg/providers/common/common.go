@@ -35,6 +35,10 @@ func Configure() {
 func PrepareTokensAndClient(r *http.Request, ptokens *structs.PTokens, setProviderToken bool, opts ...oauth2.AuthCodeOption) (*http.Client, *oauth2.Token, error) {
 	// Pass by value, avoid modifying global variable
 	oauthClient := *cfg.OAuthClient
+	if oauthClient.Scopes != nil {
+		// clone array content
+		oauthClient.Scopes = append([]string{}, cfg.OAuthClient.Scopes...)
+	}
 
 	if len(cfg.GenOAuth.RedirectURLs) > 0 {
 		found := false
