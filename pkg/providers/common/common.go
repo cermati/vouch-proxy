@@ -11,14 +11,16 @@ OR CONDITIONS OF ANY KIND, either express or implied.
 package common
 
 import (
-	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
 	"github.com/vouch/vouch-proxy/pkg/cfg"
+	"github.com/vouch/vouch-proxy/pkg/domains"
 	"github.com/vouch/vouch-proxy/pkg/structs"
 )
 
@@ -31,7 +33,25 @@ func Configure() {
 
 // PrepareTokensAndClient setup the client, usually for a UserInfo request
 func PrepareTokensAndClient(r *http.Request, ptokens *structs.PTokens, setProviderToken bool, opts ...oauth2.AuthCodeOption) (*http.Client, *oauth2.Token, error) {
-	providerToken, err := cfg.OAuthClient.Exchange(context.TODO(), r.URL.Query().Get("code"), opts...)
+	// Pass by value, avoid modifying global variable
+	oauthClient := *cfg.OAuthClient
+
+	if len(cfg.GenOAuth.RedirectURLs) > 0 {
+		found := false
+		domain := domains.Matches(r.Host)
+		for _, v := range cfg.GenOAuth.RedirectURLs {
+			if strings.Contains(v, domain) {
+				found = true
+				oauthClient.RedirectURL = domain
+				break
+			}
+		}
+		if !found {
+			return nil, nil, fmt.Errorf("no callback_url matched %s (is the `Host` header being passed to Vouch Proxy?)", domain)
+		}
+	}
+
+	providerToken, err := oauthClient.Exchange(r.Context(), r.URL.Query().Get("code"), opts...)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -48,7 +68,7 @@ func PrepareTokensAndClient(r *http.Request, ptokens *structs.PTokens, setProvid
 	}
 
 	log.Debugf("ptokens: accessToken length: %d, IdToken length: %d", len(ptokens.PAccessToken), len(ptokens.PIdToken))
-	client := cfg.OAuthClient.Client(context.TODO(), providerToken)
+	client := oauthClient.Client(r.Context(), providerToken)
 	return client, providerToken, err
 }
 
