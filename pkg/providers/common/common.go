@@ -33,7 +33,7 @@ func Configure() {
 
 // PrepareTokensAndClient setup the client, usually for a UserInfo request
 func PrepareTokensAndClient(r *http.Request, ptokens *structs.PTokens, setProviderToken bool, opts ...oauth2.AuthCodeOption) (*http.Client, *oauth2.Token, error) {
-	// Pass by value, avoid modifying global variable
+	// Avoid modifying global variable, copy the value of global OauthClient to local variable
 	oauthClient := *cfg.OAuthClient
 	if oauthClient.Scopes != nil {
 		// clone array content

@@ -254,7 +254,7 @@ func oauthLoginURL(r *http.Request, session sessions.Session) string {
 		return cfg.OAuthClient.AuthCodeURL(state, oauth2.SetAuthURLParam("response_type", "id"))
 	}
 
-	// Pass by value, avoid modifying global variable
+	// Avoid modifying global variable, copy the value of global OauthClient to local variable
 	oauthClient := *cfg.OAuthClient
 	if oauthClient.Scopes != nil {
 		// clone array content
