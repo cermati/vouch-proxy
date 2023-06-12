@@ -46,7 +46,7 @@ func PrepareTokensAndClient(r *http.Request, ptokens *structs.PTokens, setProvid
 		for _, v := range cfg.GenOAuth.RedirectURLs {
 			if strings.Contains(v, domain) {
 				found = true
-				oauthClient.RedirectURL = domain
+				oauthClient.RedirectURL = v
 				break
 			}
 		}
