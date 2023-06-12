@@ -254,6 +254,13 @@ func oauthLoginURL(r *http.Request, session sessions.Session) string {
 		return cfg.OAuthClient.AuthCodeURL(state, oauth2.SetAuthURLParam("response_type", "id"))
 	}
 
+	// Avoid modifying global variable, copy the value of global OauthClient to local variable
+	oauthClient := *cfg.OAuthClient
+	if oauthClient.Scopes != nil {
+		// clone array content
+		oauthClient.Scopes = append([]string{}, cfg.OAuthClient.Scopes...)
+	}
+
 	// cfg.OAuthClient.RedirectURL is set in cfg
 	// this checks the multiple redirect case for multiple matching domains
 	if len(cfg.GenOAuth.RedirectURLs) > 0 {
@@ -264,7 +271,7 @@ func oauthLoginURL(r *http.Request, session sessions.Session) string {
 			if strings.Contains(v, domain) {
 				found = true
 				log.Debugf("/login callback_url set to %s", v)
-				cfg.OAuthClient.RedirectURL = v
+				oauthClient.RedirectURL = v
 				break
 			}
 		}
@@ -281,7 +288,7 @@ func oauthLoginURL(r *http.Request, session sessions.Session) string {
 	if cfg.OAuthopts != nil {
 		opts = append(opts, cfg.OAuthopts...)
 	}
-	return cfg.OAuthClient.AuthCodeURL(state, opts...)
+	return oauthClient.AuthCodeURL(state, opts...)
 }
 
 var regExJustAlphaNum, _ = regexp.Compile("[^a-zA-Z0-9]+")
