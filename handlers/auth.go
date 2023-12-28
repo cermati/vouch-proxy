@@ -13,6 +13,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/vouch/vouch-proxy/pkg/cfg"
 	"github.com/vouch/vouch-proxy/pkg/cookie"
@@ -105,7 +106,8 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 	if requestedURL == "" {
 		tokenstring, err = jwtmanager.NewVPJWT(user, customClaims, ptokens)
 	} else {
-		aud := domains.Matches(requestedURL)
+		u, _ := url.Parse(requestedURL)
+		aud := domains.Matches(u.Host)
 		tokenstring, err = jwtmanager.NewVPJWTWithAud(user, customClaims, ptokens, aud)
 	}
 
