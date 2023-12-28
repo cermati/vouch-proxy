@@ -79,7 +79,7 @@ func NewVPJWT(u structs.User, customClaims structs.CustomClaims, ptokens structs
 	return NewVPJWTWithAud(u, customClaims, ptokens, aud)
 }
 
-// NewVPNewVPJWTWithAudJWT issue a signed Vouch Proxy JWT for a user with custom aud
+// NewVPJWTWithAud issue a signed Vouch Proxy JWT for a user with custom aud
 func NewVPJWTWithAud(u structs.User, customClaims structs.CustomClaims, ptokens structs.PTokens, audience string) (string, error) {
 	// User`token`
 	// u.PrepareUserData()
