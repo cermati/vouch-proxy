@@ -97,18 +97,26 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// SUCCESS!! they are authorized
 
-	// issue the jwt
+	// get the originally requested URL so we can send them on their way
+	requestedURL := session.Values["requestedURL"].(string)
 
-	tokenstring, err := jwtmanager.NewVPJWT(user, customClaims, ptokens)
+	// issue the jwt
+	var tokenstring string
+	if requestedURL == "" {
+		tokenstring, err = jwtmanager.NewVPJWT(user, customClaims, ptokens)
+	} else {
+		aud := domains.Matches(requestedURL)
+		tokenstring, err = jwtmanager.NewVPJWTWithAud(user, customClaims, ptokens, aud)
+	}
+
 	if err != nil {
 		responses.Error500(w, r, fmt.Errorf("/auth Token creation failure: %w . Please seek support from your administrator", err))
 		return
 
 	}
+
 	cookie.SetCookie(w, r, tokenstring)
 
-	// get the originally requested URL so we can send them on their way
-	requestedURL := session.Values["requestedURL"].(string)
 	if requestedURL != "" {
 		// clear out the session value
 		session.Values["requestedURL"] = ""
