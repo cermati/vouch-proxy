@@ -106,8 +106,17 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 	if requestedURL == "" {
 		tokenstring, err = jwtmanager.NewVPJWT(user, customClaims, ptokens)
 	} else {
-		u, _ := url.Parse(requestedURL)
+		u, err1 := url.Parse(requestedURL)
+		if err1 != nil {
+			responses.Error400(w, r, fmt.Errorf("/auth requested URL from cookie is not valid: %w", err))
+			return
+		}
+
 		aud := domains.Matches(u.Host)
+		if aud == "" {
+			responses.Error403(w, r, fmt.Errorf("/auth Requested Host %s is not whitelisted", u.Host))
+		}
+
 		tokenstring, err = jwtmanager.NewVPJWTWithAud(user, customClaims, ptokens, aud)
 	}
 
