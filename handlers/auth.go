@@ -108,7 +108,7 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		u, err1 := url.Parse(requestedURL)
 		if err1 != nil {
-			responses.Error400(w, r, fmt.Errorf("/auth requested URL from cookie is not valid: %w", err))
+			responses.Error400(w, r, fmt.Errorf("/auth requested URL from cookie is not valid: %w", err1))
 			return
 		}
 
