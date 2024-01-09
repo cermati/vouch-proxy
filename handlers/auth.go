@@ -115,6 +115,7 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 		aud := domains.Matches(u.Host)
 		if aud == "" {
 			responses.Error403(w, r, fmt.Errorf("/auth Requested Host %s is not whitelisted", u.Host))
+			return
 		}
 
 		tokenstring, err = jwtmanager.NewVPJWTWithAud(user, customClaims, ptokens, aud)
