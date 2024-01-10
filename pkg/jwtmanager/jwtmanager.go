@@ -76,6 +76,11 @@ func audience() string {
 
 // NewVPJWT issue a signed Vouch Proxy JWT for a user
 func NewVPJWT(u structs.User, customClaims structs.CustomClaims, ptokens structs.PTokens) (string, error) {
+	return NewVPJWTWithAud(u, customClaims, ptokens, aud)
+}
+
+// NewVPJWTWithAud issue a signed Vouch Proxy JWT for a user with custom aud
+func NewVPJWTWithAud(u structs.User, customClaims structs.CustomClaims, ptokens structs.PTokens, audience string) (string, error) {
 	// User`token`
 	// u.PrepareUserData()
 	claims := VouchClaims{
@@ -86,7 +91,7 @@ func NewVPJWT(u structs.User, customClaims structs.CustomClaims, ptokens structs
 		StandardClaims,
 	}
 
-	claims.Audience = aud
+	claims.Audience = audience
 	claims.ExpiresAt = time.Now().Add(time.Minute * time.Duration(cfg.Cfg.JWT.MaxAge)).Unix()
 
 	// https://github.com/vouch/vouch-proxy/issues/287

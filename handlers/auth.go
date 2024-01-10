@@ -13,6 +13,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/vouch/vouch-proxy/pkg/cfg"
 	"github.com/vouch/vouch-proxy/pkg/cookie"
@@ -97,18 +98,37 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// SUCCESS!! they are authorized
 
-	// issue the jwt
+	// get the originally requested URL so we can send them on their way
+	requestedURL := session.Values["requestedURL"].(string)
 
-	tokenstring, err := jwtmanager.NewVPJWT(user, customClaims, ptokens)
+	// issue the jwt
+	var tokenstring string
+	if requestedURL == "" {
+		tokenstring, err = jwtmanager.NewVPJWT(user, customClaims, ptokens)
+	} else {
+		u, err1 := url.Parse(requestedURL)
+		if err1 != nil {
+			responses.Error400(w, r, fmt.Errorf("/auth requested URL from cookie is not valid: %w", err1))
+			return
+		}
+
+		aud := domains.Matches(u.Host)
+		if aud == "" {
+			responses.Error403(w, r, fmt.Errorf("/auth Requested Host %s is not whitelisted", u.Host))
+			return
+		}
+
+		tokenstring, err = jwtmanager.NewVPJWTWithAud(user, customClaims, ptokens, aud)
+	}
+
 	if err != nil {
 		responses.Error500(w, r, fmt.Errorf("/auth Token creation failure: %w . Please seek support from your administrator", err))
 		return
 
 	}
+
 	cookie.SetCookie(w, r, tokenstring)
 
-	// get the originally requested URL so we can send them on their way
-	requestedURL := session.Values["requestedURL"].(string)
 	if requestedURL != "" {
 		// clear out the session value
 		session.Values["requestedURL"] = ""
