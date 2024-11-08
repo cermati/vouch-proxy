@@ -47,6 +47,25 @@ func Matches(s string) string {
 	return ""
 }
 
+// MatchesStrict returns one of the domains we're configured for with strict comparison (not matching *.domain.com)
+func MatchesStrict(s string) string {
+	if strings.Contains(s, ":") {
+		// then we have a port and we just want to check the host
+		split := strings.Split(s, ":")
+		log.Debugf("removing port from %s to test domain %s", s, split[0])
+		s = split[0]
+	}
+
+	for i, v := range cfg.Cfg.Domains {
+		if s == v {
+			log.Debugf("domain %s matched array value at [%d]=%v", s, i, v)
+			return v
+		}
+	}
+	log.Warnf("domain %s not found in any domains %v", s, cfg.Cfg.Domains)
+	return ""
+}
+
 // IsUnderManagement check if an email is under vouch-managed domain
 func IsUnderManagement(email string) bool {
 	split := strings.Split(email, "@")
