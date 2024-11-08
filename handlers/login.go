@@ -228,7 +228,13 @@ func getValidRequestedURL(r *http.Request) (string, error) {
 
 	hostname := u.Hostname()
 	if cfg.GenOAuth.Provider != cfg.Providers.IndieAuth {
-		d := domains.Matches(hostname)
+		var d string
+		if cfg.Cfg.StrictDomainCheck {
+			d = domains.MatchesStrict(hostname)
+		} else {
+			d = domains.Matches(hostname)
+		}
+
 		if d == "" {
 			inCookieDomain := (hostname == cfg.Cfg.Cookie.Domain || strings.HasSuffix(hostname, "."+cfg.Cfg.Cookie.Domain))
 			if cfg.Cfg.Cookie.Domain == "" || !inCookieDomain {

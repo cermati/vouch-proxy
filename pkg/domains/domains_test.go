@@ -11,9 +11,9 @@ OR CONDITIONS OF ANY KIND, either express or implied.
 package domains
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/vouch/vouch-proxy/pkg/cfg"
 )
 
@@ -49,4 +49,13 @@ func TestMatches(t *testing.T) {
 	assert.Equal(t, "sub.test.mydomain.com", Matches("sub.test.mydomain.com"))
 	assert.Equal(t, "sub.test.mydomain.com", Matches("subsub.sub.test.mydomain.com"))
 	assert.Equal(t, "test.mydomain.com", Matches("other.test.mydomain.com"))
+}
+
+func TestMatchesStrict(t *testing.T) {
+	assert.Equal(t, "vouch.github.io", MatchesStrict("vouch.github.io"))
+	assert.Equal(t, "", MatchesStrict("sub.vouch.github.io"))
+	assert.Equal(t, "", MatchesStrict("a-different-vouch.github.io"))
+
+	assert.Equal(t, "", MatchesStrict("mydomain.com"))
+
 }
