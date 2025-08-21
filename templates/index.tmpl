@@ -40,6 +40,11 @@ All 302 redirects will be captured and presented as links here
 {{ end }}
 </ul>
 {{ end }}
+{{ if .PrevURL }}
+<div>
+<p>Try revisiting this <a href="{{ .PrevURL}}">previous URL</a></p>
+</div>
+{{ end }}
 <div class="bottom">
 For support, please contact your network administrator or whomever configured Nginx to use Vouch Proxy.
 <p/>

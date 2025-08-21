@@ -27,6 +27,7 @@ type Index struct {
 	TestURLs     []string
 	Testing      bool
 	DocumentRoot string
+	PrevURL      string
 }
 
 var (
@@ -56,12 +57,18 @@ func RenderIndex(w http.ResponseWriter, msg string) {
 
 // renderError html error page
 // something terse for the end user
-func renderError(w http.ResponseWriter, msg string, status int) {
+func renderError(w http.ResponseWriter, msg string, status int, opts ...Option) {
 	log.Debugf("rendering error for user: %s", msg)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(status)
-	if err := indexTemplate.Execute(w, &Index{Msg: msg, DocumentRoot: cfg.Cfg.DocumentRoot}); err != nil {
+
+	idx := &Index{Msg: msg, DocumentRoot: cfg.Cfg.DocumentRoot}
+	for _, o := range opts {
+		o(idx)
+	}
+
+	if err := indexTemplate.Execute(w, idx); err != nil {
 		log.Error(err)
 	}
 }
@@ -85,9 +92,9 @@ func Redirect302(w http.ResponseWriter, r *http.Request, rURL string) {
 }
 
 // Error400 Bad Request
-func Error400(w http.ResponseWriter, r *http.Request, e error) {
+func Error400(w http.ResponseWriter, r *http.Request, e error, opts ...Option) {
 	cancelClearSetError(w, r, e)
-	renderError(w, "400 Bad Request", http.StatusBadRequest)
+	renderError(w, "400 Bad Request", http.StatusBadRequest, opts...)
 }
 
 // Error401 Unauthorized, the standard error returned when failing /validate

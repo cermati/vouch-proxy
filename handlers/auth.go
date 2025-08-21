@@ -63,10 +63,18 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get the originally requested URL so we can send them on their way
+	requestedURL := session.Values["requestedURL"].(string)
+
+	var responsesOptions []responses.Option
+	if requestedURL != "" {
+		responsesOptions = append(responsesOptions, responses.WithPrevURLOption(requestedURL))
+	}
+
 	// is the nonce "state" valid?
 	queryState := r.URL.Query().Get("state")
 	if session.Values["state"] != queryState {
-		responses.Error400(w, r, fmt.Errorf("/auth Invalid session state: stored %s, returned %s", session.Values["state"], queryState))
+		responses.Error400(w, r, fmt.Errorf("/auth Invalid session state: stored %s, returned %s", session.Values["state"], queryState), responsesOptions...)
 		return
 	}
 
@@ -85,7 +93,7 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := getUserInfo(r, &user, &customClaims, &ptokens, authCodeOptions...); err != nil {
-		responses.Error400(w, r, fmt.Errorf("/auth Error while retrieving user info after successful login at the OAuth provider: %w", err))
+		responses.Error400(w, r, fmt.Errorf("/auth Error while retrieving user info after successful login at the OAuth provider: %w", err), responsesOptions...)
 		return
 	}
 	log.Debugf("/auth/{state}/ Claims from userinfo: %+v", customClaims)
@@ -97,9 +105,6 @@ func AuthStateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SUCCESS!! they are authorized
-
-	// get the originally requested URL so we can send them on their way
-	requestedURL := session.Values["requestedURL"].(string)
 
 	// issue the jwt
 	var tokenstring string
